@@ -23,12 +23,12 @@ import {
 import { useState, useEffect } from "react";
 
 const navLinks = [
+  { name: "Home", href: "#home" },
   { name: "About", href: "#about" },
   { name: "Skills", href: "#skills" },
   { name: "Projects", href: "#projects" },
   { name: "Experience", href: "#experience" },
   { name: "Education", href: "#education" },
-  { name: "Contact", href: "#contact" },
 ];
 
 const skills = {
@@ -42,6 +42,7 @@ const projects = [
   {
     title: "Coffee Shop Sales Dashboard",
     tools: "MS Excel",
+    image: "/coffee-dashboard.jpg",
     link: "#",
     description: [
       "Cleaned and analysed 149,116 POS transactions across 3 NYC locations for H1 2023",
@@ -53,6 +54,7 @@ const projects = [
   {
     title: "Toy Store KPI Report",
     tools: "Power BI",
+    image: "/powerbi-dashboard.jpg",
     link: "#",
     description: [
       "Built a star-schema relational model on 41,830 orders and $658K revenue from a multi-location Mexican toy chain",
@@ -116,11 +118,30 @@ const education = [
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.3, rootMargin: "-10% 0px -70% 0px" }
+    );
+
+    const sections = document.querySelectorAll("section[id]");
+    sections.forEach((section) => observer.observe(section));
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
   return (
@@ -139,18 +160,30 @@ export default function App() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex gap-8 items-center">
-            {navLinks.map((link, i) => (
-              <motion.a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-muted hover:text-ink transition-colors"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
-                {link.name}
-              </motion.a>
-            ))}
+            {navLinks.map((link, i) => {
+              const isActive = activeSection === link.href.slice(1);
+              return (
+                <motion.a
+                  key={link.name}
+                  href={link.href}
+                  className={`text-sm font-medium transition-colors relative py-1 ${
+                    isActive ? "text-ink" : "text-muted hover:text-ink"
+                  }`}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  {link.name}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-underline"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </motion.a>
+              );
+            })}
             <motion.a
               href="#contact"
               className="bg-ink text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-accent transition-all"
@@ -195,7 +228,7 @@ export default function App() {
       </nav>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center pt-20 section-padding relative overflow-hidden">
+      <section id="home" className="min-h-screen flex items-center pt-20 section-padding relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full -z-10">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />
@@ -207,13 +240,6 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold uppercase tracking-widest mb-6">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-              </span>
-              Available for new projects
-            </div>
             <h1 className="text-6xl md:text-8xl font-serif mb-6 leading-[0.9]">
               Business <br />
               <span className="italic text-accent">Analyst</span>
@@ -242,20 +268,11 @@ export default function App() {
             <div className="aspect-square rounded-3xl overflow-hidden glass relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <img 
-                src="https://picsum.photos/seed/business/800/800" 
+                src="/profile.jpg" 
                 alt="Ranjith P" 
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute bottom-8 left-8 right-8 p-6 glass rounded-2xl">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-accent mb-1">Current Focus</p>
-                    <h3 className="text-xl font-serif font-bold">Data Visualization & BI</h3>
-                  </div>
-                  <BarChart3 className="w-8 h-8 text-accent" />
-                </div>
-              </div>
             </div>
           </motion.div>
         </div>
@@ -341,11 +358,20 @@ export default function App() {
               >
                 <div className="aspect-video rounded-3xl overflow-hidden mb-6 relative">
                   <img 
-                    src={`https://picsum.photos/seed/${project.title}/800/450`} 
+                    src={project.image} 
                     alt={project.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
+                  <div className="absolute top-4 left-4 z-10">
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest glass ${
+                      project.tools.includes("Excel") ? "text-green-600 border-green-200" : 
+                      project.tools.includes("Power BI") ? "text-yellow-600 border-yellow-200" : 
+                      "text-accent border-accent/20"
+                    }`}>
+                      {project.tools}
+                    </div>
+                  </div>
                   <div className="absolute inset-0 bg-ink/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <a href={project.link} className="bg-white text-ink px-6 py-3 rounded-full font-medium flex items-center gap-2">
                       View Case Study <ExternalLink className="w-4 h-4" />
@@ -472,11 +498,12 @@ export default function App() {
               </div>
 
               <div className="flex gap-4 mt-12">
-                <a href="https://linkedin.com/in/ranjith-p-0b43ab296" className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-accent hover:text-white transition-all">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-accent hover:text-white transition-all">
-                  <Github className="w-5 h-5" />
+                <a 
+                  href="https://linkedin.com/in/ranjith-p-0b43ab296" 
+                  className="w-12 h-12 rounded-lg bg-[#0077B5] flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-[#0077B5]/20"
+                  title="LinkedIn Profile"
+                >
+                  <Linkedin className="w-6 h-6 text-white fill-white" />
                 </a>
               </div>
             </div>
